@@ -271,7 +271,7 @@ func (c *Controller) handlePhase(key string, cachedMachine *cachedMachine, machi
 	case v1.MachineInitializing:
 		err = c.doInitializing(machine)
 	case v1.MachineRunning, v1.MachineFailed:
-		err = c.startMachineHealthCheck(key, machine)
+		return nil
 	default:
 		err = errors.Errorf("no handler for %q", machine.Status.Phase)
 	}
