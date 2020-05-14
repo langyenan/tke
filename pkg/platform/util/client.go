@@ -545,7 +545,9 @@ func ClusterHost(cluster *platform.Cluster) (string, error) {
 	if address == nil {
 		return "", pkgerrors.New("no valid address for the cluster")
 	}
-
+	if h, p := SplitHostAndPath(address.Host); p != "" {
+		return fmt.Sprintf("%s:%d/%s", h, address.Port, p), nil
+	}
 	return fmt.Sprintf("%s:%d", address.Host, address.Port), nil
 }
 
@@ -617,4 +619,16 @@ func GetClusterAndCredentialV1(platformClient platformversionedclient.PlatformV1
 	}
 
 	return cluster, credential, nil
+}
+
+// SplitHostAndPath splits raw into host part and path part. The raw may be "host/path" or "host:port/path",
+// the returned path is empty if raw is IP or domain
+func SplitHostAndPath(raw string) (host, path string) {
+	if i := strings.Index(raw, "/"); i != -1 {
+		host = raw[:i]
+		path = raw[i+1:]
+		return
+	}
+	host = raw
+	return
 }
