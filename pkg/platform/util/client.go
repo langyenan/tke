@@ -26,6 +26,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -528,6 +529,21 @@ func BuildClientSet(ctx context.Context, cluster *platform.Cluster, credential *
 
 // ClusterHost returns host and port for kube-apiserver of cluster.
 func ClusterHost(cluster *platform.Cluster) (string, error) {
+	address, err := ClusterAddress(cluster)
+	if err != nil {
+		return "", err
+	}
+
+	result := fmt.Sprintf("%s:%d", address.Host, address.Port)
+	if address.Path != "" {
+		result = path.Join(result, address.Path)
+	}
+
+	return result, nil
+}
+
+// ClusterHost returns host and port for kube-apiserver of cluster.
+func ClusterAddress(cluster *platform.Cluster) (*platform.ClusterAddress, error) {
 	addrs := make(map[platform.AddressType][]platform.ClusterAddress)
 	for _, one := range cluster.Status.Addresses {
 		addrs[one.Type] = append(addrs[one.Type], one)
@@ -545,10 +561,10 @@ func ClusterHost(cluster *platform.Cluster) (string, error) {
 	}
 
 	if address == nil {
-		return "", pkgerrors.New("no valid address for the cluster")
+		return nil, pkgerrors.New("no valid address for the cluster")
 	}
 
-	return fmt.Sprintf("%s:%d", address.Host, address.Port), nil
+	return address, nil
 }
 
 // ClusterV1Host returns host and port for kube-apiserver of versioned cluster resource.
